@@ -1,0 +1,6 @@
+.DS_Store
+fort.*
+*.o
+*.exe
+*.mod
+__pycache__/
