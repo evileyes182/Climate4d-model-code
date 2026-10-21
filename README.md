@@ -4,6 +4,14 @@ This is Appendix A of J. Bailie, P. Subramanian and B. Krauskopf, *Regular and c
 
 The computations in the paper were carried out with the continuation package AUTO-07p [1] and with Julia [2]. This repository contains six self-contained folders that each reproduce one of the computations described below; each contains the right-hand side of system (2.10) as a Fortran file for AUTO-07p (or as a Julia function), a driver `run.py` (or `run.jl`) that performs the computation and writes the results as plain data files, and a plotting script `plot.jl` based on Makie [3]. A folder is run by executing the driver and then the plotting script. Note that AUTO-07p, Python 3, and Julia must be installed.
 
+For example, the branches of equilibria in Figure 3(b) are computed and plotted by running, from the top folder of this repository,
+
+```bash
+cd fig3b_equilibria
+auto run.py
+julia plot.jl
+```
+
 The branches of equilibria in Figure 3(b), with their saddle-node and Hopf bifurcations $\mathrm{SN}$ and $\mathrm{H}$, are computed in the folder [`fig3b_equilibria`](fig3b_equilibria) by continuation in $\mu$ for $\eta=-1.5$. The Hopf curve and the saddle-node curve in Figure 4 are computed in the folder [`fig4_hopf_saddle_node_curves`](fig4_hopf_saddle_node_curves) by continuing a point $\mathrm{H}$ and a point $\mathrm{SN}$ in the $(\mu,\eta)$-plane. Along the Hopf curve, the first Lyapunov coefficient $\ell_1$ [4] is the test function for generalized Hopf points $\mathrm{GH}$ and distinguishes supercritical ($\ell_1<0$, solid) from subcritical ($\ell_1>0$, dashed) segments.
 
 The branch of periodic orbits in Figure 6(c), with its saddle-node, period-doubling and torus bifurcations $\mathrm{S}$, $\mathrm{PD}$ and $\mathrm{T}$, is computed in the folder [`fig6c_periodic_orbits`](fig6c_periodic_orbits) by continuation in $\mu$ from $\mathrm{H}_1$ for $\eta=-4.08$. The branch is plotted as the minimum and maximum of $\Psi$ along each orbit. We follow the bifurcations $\mathrm{S}$ and $\mathrm{PD}$ as curves in the $(\mu,\eta)$-plane in the folder [`fig7_saddle_node_period_doubling_curves`](fig7_saddle_node_period_doubling_curves); they bound the second region of stable periodic orbits in Figure 7.
