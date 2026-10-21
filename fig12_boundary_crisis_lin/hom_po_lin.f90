@@ -1,3 +1,10 @@
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+!   hom_po_lin :  Lin's method for a homoclinic orbit of a saddle periodic orbit of system (10) in AUTO-07p,
+!                 U(1:4) periodic orbit, U(5:16) Floquet bundles, U(17:20) W^u segment, U(21:24) W^s segment.
+!                 Compiled and run by run.py (python3 run.py).
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
 SUBROUTINE RHS(U,PAR,F,JAC,A)
     IMPLICIT NONE
     DOUBLE PRECISION, INTENT(IN) :: U(4), PAR(*)
@@ -489,7 +496,7 @@ SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
     DOUBLE PRECISION H(4,4,4), FP(4,2), AP(4,4)
     INTEGER :: i, k
 
-    ! Eig values and eigfunctions norms + PO period
+    ! Floquet multipliers, eigenfunction norms and period
     h1      = PAR(20) 
     lambda1 = PAR(21)
     h2      = PAR(22)
@@ -501,7 +508,7 @@ SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
     IF (IJAC > 0) DFDU(1:NDIM,1:NDIM) = 0
     IF (IJAC == 2) DFDP(1:NDIM,1:48) = 0
 
-    ! PO 
+    ! Periodic orbit
     CALL RHS(U,PAR,F,.TRUE.,A)
     IF (IJAC > 0) CALL D2RHS(U,PAR,H,FP,AP)
 	IF(NDIM==4)THEN
@@ -516,7 +523,7 @@ SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
         DFDP(1:4,1:2) = T*FP
     ENDIF
 
-    ! Store (stable) floq 
+    ! Stable Floquet bundle 1
     F(5:8) = MATMUL((A(:,:)),U(5:8))
     F(1:8) = T*F(1:8)
     IF (IJAC > 0) THEN
@@ -533,7 +540,7 @@ SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
     ENDIF
     IF (NDIM==8) RETURN
 
-    ! Store (stable) floq 
+    ! Stable Floquet bundle 2
     F(9:12) = MATMUL(A(:,:),U(9:12))
     F(9:12) = T*F(9:12)
     IF (IJAC > 0) THEN
@@ -550,10 +557,8 @@ SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
     ENDIF
     IF (NDIM==12) RETURN
 
-    ! Store (unstable) floq 
-    ! F(13:16) = MATMUL(A(:,:),U(13:16))
+    ! Unstable Floquet bundle, in log form
     F(13:16) = T*MATMUL(A,U(13:16)) + LOG(ABS(lambda3))*U(13:16)
-    ! F(13:16) = T*F(13:16)
     IF (IJAC > 0) THEN
         DO i = 1, 4
             DO k = 1, 4
@@ -602,26 +607,17 @@ SUBROUTINE STPNT(NDIM,U,PAR,T)
     DOUBLE PRECISION, INTENT(INOUT) :: U(NDIM),PAR(*)
     DOUBLE PRECISION, INTENT(IN) :: T
     DOUBLE PRECISION, SAVE :: s(16)
-    DOUBLE PRECISION :: h1, h2, h3
-    DOUBLE PRECISION :: lambda1, lambda2, lambda3
-    DOUBLE PRECISION :: eps1, eps2, epu1, gap, SEG
-    h1      = PAR(20) 
-    lambda1 = PAR(21)
-    h2      = PAR(22)
-    lambda2 = PAR(23)
-    h3      = PAR(24)
-    lambda3 = PAR(25)
+    DOUBLE PRECISION :: eps1, eps2, epu1
     eps1    = PAR(34)
     eps2    = PAR(35)
     epu1    = PAR(36)
-    gap     = PAR(29)
 
     ! Epsilon values
     PAR(34) = 1e-6 ! eps1
     PAR(35) = 1e-6 ! eps2
     PAR(36) = 1e-2 ! epu1
 
-    ! Inital gueses for stable floq 
+    ! Initial guesses for the stable Floquet multipliers
     PAR(23) = -0.1
     PAR(24) = -0.1
     
@@ -634,25 +630,23 @@ SUBROUTINE STPNT(NDIM,U,PAR,T)
     PAR(12) = 0
     PAR(13) = 0
 
-    ! Section definition. Here x-component = PAR(40)
+    ! Section y_N = PAR(40)
     PAR(40) = 1.35
 
-    ! Base equilibrium for intial continuation 
+    ! Equilibrium to start the first continuation
     U(1) = -3.5435D0
     U(2) = 0.9597D0
     U(3) = 3.8512D0
     U(4) = 1.1678D0
 
-    ! Set up eignspaces for segment continuation
-    IF(NDIM==20)THEN ! unstable eignspace (1D)
+    ! Start the segments on the Floquet eigenspaces
+    IF(NDIM==20)THEN ! unstable eigenspace (1D)
         IF(PAR(12)==0) THEN
-            s(1:4) = U(1:4)
-            s(9:12) = U(9:12)
             s(1:16) = U(1:16)
        ENDIF
        U(17:20) = s(1:4) + epu1*s(13:16)
        RETURN
-    ELSEIF(NDIM==24)THEN ! stable eignsapce (2D)
+    ELSEIF(NDIM==24)THEN ! stable eigenspace (2D)
        IF(PAR(13)==0)THEN
             s(5:8) = U(5:8)
             s(9:12) = U(9:12)
@@ -661,27 +655,6 @@ SUBROUTINE STPNT(NDIM,U,PAR,T)
        RETURN
     ENDIF
 END SUBROUTINE STPNT
-
-
-    ! IF (FIRST) THEN ! initialization for BCND
-    !    FIRST = .FALSE.
-    !    IF (NDIM==20) THEN ! After WU continuation 
-    !       PAR(27) = GETP("BV0",20,U) - SIG ! sigma+
-    !    ELSEIF (NDIM == 24) THEN  ! After WS continuation 
-    !       NBC = AINT(GETP("NBC",0,U)) 
-    !       IF (NBC == 29) THEN ! Right as we do the Ws cont 
-    !         PAR(28) = GETP("BV1",24,U) - SIG ! sigma-
-    !       ELSEIF (NBC == 33) THEN ! When we start LIN 
-    !         IF (DOT_PRODUCT(PAR(30:33),PAR(30:33)) > 0) RETURN
-    !         DO i=1,4
-    !             a(i) = GETP("BV0",17+i,U)
-    !             b(i) = GETP("BV1",20+i,U)
-    !             d(i) = GETP("BV0",16+i,U) - GETP("BV1",20+i,U)
-    !         ENDDO
-    !         normlv = sqrt(DOT_PRODUCT(d,d))
-    !         PAR(29) = normlv  ! gap size in PAR(29)
-    !         PAR(30:33) = d(1:4)/normlv ! Lin vector in PAR(30)-PAR(33)
-
 
 
 SUBROUTINE BCND(NDIM,PAR,ICP,NBC,U0,U1,FB,IJAC,DBC)
@@ -706,7 +679,7 @@ SUBROUTINE BCND(NDIM,PAR,ICP,NBC,U0,U1,FB,IJAC,DBC)
     epu1    = PAR(36)
     gap     = PAR(29)
 
-    !!! Section on 2nd coordinate 
+    !!! Section y_N = SEG
     SEG = PAR(40)
 
     ! Jacobian columns: U0(i) -> i, U1(i) -> N+i, PAR(j) -> P+j
@@ -758,7 +731,7 @@ SUBROUTINE BCND(NDIM,PAR,ICP,NBC,U0,U1,FB,IJAC,DBC)
     IF (NBC==14) RETURN 
 
     !! FLOQ 3 
-    FB(15:18) =  U1(13:16) - SIGN(1.0d0,lambda1)*U0(13:16) !U1(13:16) - lambda3*U0(13:16)  
+    FB(15:18) =  U1(13:16) - SIGN(1.0d0,lambda1)*U0(13:16)
     FB(19) = h3 - DOT_PRODUCT(U0(13:16), U0(13:16))  
     IF (IJAC > 0) THEN
         DO i = 1, 4
@@ -771,7 +744,7 @@ SUBROUTINE BCND(NDIM,PAR,ICP,NBC,U0,U1,FB,IJAC,DBC)
     IF (NBC==19) RETURN 
 
     !! WU 
-    FB(20:23) = U0(17:20) - (U0(1:4) + epu1*U0(13:16))  ! espace
+    FB(20:23) = U0(17:20) - (U0(1:4) + epu1*U0(13:16))  ! unstable eigenspace
     FB(24)    = U1(17) - SEG - PAR(27) ! on section 
     IF (IJAC > 0) THEN
         DO i = 1, 4
@@ -789,7 +762,7 @@ SUBROUTINE BCND(NDIM,PAR,ICP,NBC,U0,U1,FB,IJAC,DBC)
     IF (NBC==24) RETURN
 
     !! WS 
-    FB(25:28) = U1(21:24) - (U0(1:4) + eps1*U0(5:8) + eps2*U0(9:12))  ! espace
+    FB(25:28) = U1(21:24) - (U0(1:4) + eps1*U0(5:8) + eps2*U0(9:12))  ! stable eigenspace
     FB(29) = U0(21) - SEG - PAR(28) ! on section 
     IF (IJAC > 0) THEN
         DO i = 1, 4
@@ -841,10 +814,6 @@ SUBROUTINE ICND(NDIM,PAR,ICP,NINT,U,UOLD,UDOT,UPOLD,FI,IJAC,DINT)
     ENDIF
     IF (IJAC == 2) DINT(1,NDIM+1:NDIM+48) = 0
     IF (NINT==1) RETURN
-
-!    FI(2) = DOT_PRODUCT(UPOLD(21:24),U(21:24)-UOLD(21:24))
-!    FI(3) = DOT_PRODUCT(UPOLD(17:20),U(17:20)-UOLD(17:20))
-!    IF (NINT==3) RETURN
 END SUBROUTINE ICND
   
 
@@ -864,9 +833,9 @@ SUBROUTINE PVLS(NDIM,U,PAR)
     INTEGER i, NBC
     LOGICAL, SAVE :: FIRST = .TRUE.
 
-!   PAR(27) : sigma+ : U0(22)-SIG (x-distance W^u(P) from section x=SIG)
-!   PAR(28) : sigma- : U1(18)-SIG (x-distance W^s(E) from section x=SIG)
-!   PAR(29) : eta    : gap size for Lin vector
+!   PAR(27) : sigma+ : y_N-distance of the W^u segment end from the section y_N = SIG
+!   PAR(28) : sigma- : y_N-distance of the W^s segment start from the section y_N = SIG
+!   PAR(29) : LIN    : gap size along the Lin vector
 !   PAR(30:33) : lin vector 
 !   PAR(34) = eps1 
 !   PAR(35) = eps2
@@ -899,7 +868,3 @@ SUBROUTINE PVLS(NDIM,U,PAR)
 
     PAR(45:48) =  a(1:4) - b(1:4) - PAR(29)*PAR(30:33)
 END SUBROUTINE PVLS
-
-    ! FB(30:33) = U0(17:20) - U1(21:24) - gap*PAR(30:33)
-
-!  U0(17:20) - U1(21:24)

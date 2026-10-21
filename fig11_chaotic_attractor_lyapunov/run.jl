@@ -1,5 +1,6 @@
 # Figure 11: chaotic attractor of system (10) at (mu, eta) = (-2.128e-3, -3.99), reached by shooting off the
 # 2-D unstable manifold of the northward equilibrium, and its largest Lyapunov exponent lambda_max (Figure 12)
+# Run: julia run.jl (about 1 min); writes equilibrium.dat, eigenvalues.dat, attractor.dat, events.dat and lyapunov.dat
 using StaticArrays, DifferentialEquations, OrdinaryDiffEq, ChaosTools, DynamicalSystemsBase, LinearAlgebra, DelimitedFiles
 
 include("4D_climate_define.jl")
@@ -29,7 +30,7 @@ ic0 = xeq .+ δ .* (cos(θ) .* real.(v) .+ sin(θ) .* imag.(v))
 writedlm("equilibrium.dat", [xeq ic0])
 writedlm("eigenvalues.dat", [real.(λ) imag.(λ)])
 
-# ---- Two-stage solve: discard transient, archive only the analysis window ----
+# Two-stage solve: transient [0, TMIN] not stored, window [TMIN, TMAX] stored
 thresh = 5.0
 TMIN = 2e6
 TMAX = 4e6
@@ -63,29 +64,23 @@ KN  = k1 .+ 0.5 .* (p[3] - k1) .* (1 .+ tanh.(((U[:, 1] .- y_B) .- (U[:, 4] .- U
 Psi = ϕ .* ((U[:, 1] .- U[:, 4]) .- (U[:, 2] .- x_E))
 writedlm("attractor.dat", [t .- TMIN U KN Psi])
 
-# Convective shutdown events: minima of K_N below κ_star (as in count_minima_kappaN)
+# Convective shutdown events: minima of K_N below κ_star, less a small tolerance
 κ_star = k1 + 0.5*(p[3] - k1)*(1 - inv(sqrt(2.0)))
 ev = [i for i in 2:length(KN)-1 if KN[i-1] > KN[i] <= KN[i+1] && KN[i] < κ_star - max(1e-7, 1e-4*κ_star)]
 writedlm("events.dat", [t[ev] .- TMIN U[ev, :] KN[ev] Psi[ev]])
 
-# --- time scales (mirror your Benettin setup) ---
+# Largest Lyapunov exponent from the state at TMAX (QR method): transient Ttr, then N steps of Δt
 Ttr   = tau_slow
-Δt    = 0.2*tau_fast #0.2*tau_fast
-Tavg  = 250.0*tau_slow #250.0*tau_slow
+Δt    = 0.2*tau_fast
+Tavg  = 250.0*tau_slow
 N     = round(Int, Tavg/Δt)
 
-# Dual-safe RHS you prepared earlier:
-f! = AutoSysODE2!   # signature: (du,u,p::SVector{6,T},t) where T<:Real
+alg = AutoVern7(Rodas5P(autodiff = AutoFiniteDiff()))
 
-# AD Jacobian (ForwardDiff) via solver defaults
-p̂  = SVector{6,eltype(state)}(p)
-alg = AutoVern7(Rodas5P(autodiff = AutoFiniteDiff()))                  # or KenCarp4() if Rodas is touchy
-
-ds  = CoupledODEs(f!, state, p̂;
+ds  = CoupledODEs(AutoSysODE2!, state, p;
     diffeq=(alg=alg, abstol=1e-10, reltol=1e-9,
             save_everystep=false, maxiters=10_000_000))
 
-# QR with k=1 using AD Jacobian
+# k = 1: largest exponent only; the tangent dynamics use a ForwardDiff Jacobian of AutoSysODE2!
 λ1 = lyapunovspectrum(ds, N, 1; Δt=Δt, Ttr=Ttr, show_progress=false)[1]
 writedlm("lyapunov.dat", λ1)
-println("lambda_max = ", λ1)

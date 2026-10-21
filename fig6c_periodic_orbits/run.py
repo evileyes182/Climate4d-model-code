@@ -1,7 +1,8 @@
 # Figure 6(c): periodic orbits of system (10) continued in mu from the Hopf point H1, for eta = -4.08
+# Run: python3 run.py (with AUTO-07p set up); writes eq_*.dat, po_1.dat and *_special.dat (mu, min Psi, max Psi)
 from auto import *
 
-# Compute EQ
+# Equilibria, continued in mu in both directions
 r1 = rl(r(e='varRun', c='genericRun.t', NMX=50000, NTST=0, NCOL=4, JAC=1, IPS=1, ISP=2, NPR=1000, ISW=1, ICP=[1,2,11,12,13,14,15], DS=1e-3, DSMAX=2e-2))
 r2 = rl(r(r1(1), DS='-'))
 

@@ -1,28 +1,7 @@
+# System (10): right-hand side AutoSysODE2! and Jacobian AutoSysJac!, p = (mu, eta, kappa_N, SV, sigma, epsilon)
+# Included by run.jl
 using StaticArrays
 # ---------- RHS -------------------------------------------------
-function AutoSysODE2!(du, u, p::SVector{6,Float64}, t)
-       # use ordinary scalar unpacking; u and du can be any AbstractVector
-       y_N, y_E, x_B, x_N = u
-       m, η, k2, SV, σ, ep = p
-   
-       αT=1.7e-4; αS=0.8e-3; TaN=7.0; TaL=25.0; T0=2.65
-       S0=35.0; SB=34.538; g=3.17e-8
-       VN=7.2106e15; VL=6.3515e16; VB=18VN
-       ϕ=αT*(TaN-T0); x_E=(TaL-T0)/(TaN-T0)
-       y_B=αS/αT*(SB-S0)/(TaN-T0)
-       W=5.456*SV/σ; δN=g*VN/σ; k1=1e-2*SV/σ
-       k2n=k2; k2l=k2/2; Ψ=ϕ*((y_N-x_N)-(y_E-x_E))
-       κN=k1+0.5*(k2n-k1)*(1+tanh(((y_N-y_B)-(x_N-x_B)-η)/ep))
-       κE=k1+0.5*(k2l-k1)*(1+tanh(((y_E-y_B)-(x_E-x_B)-η)/ep))
-       Ψh=Ψ*tanh(Ψ/ep)
-   
-       TVE=VL/VN; TVB=VB/VN
-       du[1]=m+Ψ/2*(y_E-y_B)+Ψh/2*(y_E+y_B-2y_N)+W*(y_E-y_N)-κN*(y_N-y_B)
-       du[2]=(-m+Ψ/2*(y_B-y_N)+Ψh/2*(y_B+y_N-2y_E)-W*(y_E-y_N)-κE*(y_E-y_B))/TVE
-       du[3]=(Ψ/2*(x_N-x_E)+Ψh/2*(x_N+x_E-2x_B)+κN*(x_N-x_B)+κE*(x_E-x_B))/TVB
-       du[4]=-δN*(x_N-1)+Ψ/2*(x_E-x_B)+Ψh/2*(x_E+x_B-2x_N)+W*(x_E-x_N)-κN*(x_N-x_B)
-end
-
 function AutoSysODE2!(du, u, p, t)
        # use ordinary scalar unpacking; u and du can be any AbstractVector
        y_N, y_E, x_B, x_N = u
@@ -46,32 +25,7 @@ function AutoSysODE2!(du, u, p, t)
        du[4]=-δN*(x_N-1)+Ψ/2*(x_E-x_B)+Ψh/2*(x_E+x_B-2x_N)+W*(x_E-x_N)-κN*(x_N-x_B)
 end
 
-
-function AutoSysODE2!(du, u, p::MVector{6,Float64}, t)
-       # use ordinary scalar unpacking; u and du can be any AbstractVector
-       y_N, y_E, x_B, x_N = u
-       m, η, k2, SV, σ, ep = p
-
-       αT=1.7e-4; αS=0.8e-3; TaN=7.0; TaL=25.0; T0=2.65
-       S0=35.0; SB=34.538; g=3.17e-8
-       VN=7.2106e15; VL=6.3515e16; VB=18VN
-       ϕ=αT*(TaN-T0); x_E=(TaL-T0)/(TaN-T0)
-       y_B=αS/αT*(SB-S0)/(TaN-T0)
-       W=5.456*SV/σ; δN=g*VN/σ; k1=1e-2*SV/σ
-       k2n=k2; k2l=k2/2; Ψ=ϕ*((y_N-x_N)-(y_E-x_E))
-       κN=k1+0.5*(k2n-k1)*(1+tanh(((y_N-y_B)-(x_N-x_B)-η)/ep))
-       κE=k1+0.5*(k2l-k1)*(1+tanh(((y_E-y_B)-(x_E-x_B)-η)/ep))
-       Ψh=Ψ*tanh(Ψ/ep)
-
-       TVE=VL/VN; TVB=VB/VN
-       du[1]=m+Ψ/2*(y_E-y_B)+Ψh/2*(y_E+y_B-2y_N)+W*(y_E-y_N)-κN*(y_N-y_B)
-       du[2]=(-m+Ψ/2*(y_B-y_N)+Ψh/2*(y_B+y_N-2y_E)-W*(y_E-y_N)-κE*(y_E-y_B))/TVE
-       du[3]=(Ψ/2*(x_N-x_E)+Ψh/2*(x_N+x_E-2x_B)+κN*(x_N-x_B)+κE*(x_E-x_B))/TVB
-       du[4]=-δN*(x_N-1)+Ψ/2*(x_E-x_B)+Ψh/2*(x_E+x_B-2x_N)+W*(x_E-x_N)-κN*(x_N-x_B)
-end
-
-   
-    # ---------- Jacobian (in-place) --------------------------------
+# ---------- Jacobian (in-place) --------------------------------
 
 function AutoSysJac!(J::AbstractMatrix, u::AbstractVector, p::SVector{6,Float64}, t)
         m, η, k2, SV, σ, ep = p

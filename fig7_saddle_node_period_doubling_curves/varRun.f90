@@ -1,6 +1,8 @@
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-!   abc :            The A --> B --> C reaction
+!   varRun :  system (10) for AUTO-07p, U = (y_N, y_E, x_B, x_N),
+!             PAR(1:4) = (mu, eta, kappa_N, epsilon), PAR(14:15) = min, max Psi.
+!             Compiled and run by run.py (python3 run.py).
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
 SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
@@ -195,6 +197,8 @@ DFDU(4,4) = (-1.*(delta_N*ep + ep*k1 + ep*W - 0.5*ep*phi*(x_B - x_E) - &
  IF(IJAC.EQ.1)RETURN
 
 !------------------------------------------------------------
+!------- PARAMETER JACOBIAN
+!------------------------------------------------------------
 DFDP(1,1) = 1
 !------------------------------------------------------------
 DFDP(1,2) = (0.5*(k1 - 1.*k2)*(y_B - 1.*y_N)* &
@@ -257,18 +261,6 @@ DFDP(4,4) = -0.5*(-1.*(k1 - 1.*k2)*(x_B - 1.*x_N)*(-1.*eta + x_B - 1.*x_N - 1.*y
             phi**2*(x_B + x_E - 2*x_N)*(x_E - x_N - y_E + y_N)**2*(1 - &
             tanh((phi*(x_E - x_N - y_E + y_N))/ep)**2))/ep**2
 
-!------------------------------------------------------------
-!------------------------------------------------------------
-!------------------------------------------------------------
-!------------------------------------------------------------
-
-
-  
-!------------------------------------------------------------
-!------- PARAMETER JACOBIAN
-!------------------------------------------------------------
-
-
 END SUBROUTINE FUNC
 !----------------------------------------------------------------------
 
@@ -279,9 +271,6 @@ END SUBROUTINE FUNC
       INTEGER, INTENT(IN) :: NDIM
       DOUBLE PRECISION, INTENT(INOUT) :: U(NDIM),PAR(*)
       DOUBLE PRECISION, INTENT(IN) :: T
-
-      ! Define a quadruple precision kind
-      INTEGER, PARAMETER :: quad_prec = SELECTED_REAL_KIND(p=33, r=4931)   
 
       PAR(1) = -0.002006D0
       PAR(2) = -4.08D0
@@ -355,43 +344,3 @@ SUBROUTINE PSMINMAX(NDX,M,U,PS_MIN,PS_MAX)
     PS_MIN = MINVAL(PS)
     PS_MAX = MAXVAL(PS)
 END SUBROUTINE PSMINMAX
-
-!---------------------------------------------------------------------- 
-! NOTE : 
-! Parameters set in this subroutine should be considered as ``solution 
-! measures'' and be used for output purposes only.
-! 
-! They should never be used as `true'' continuation parameters. 
-!
-! They may, however, be added as ``over-specified parameters'' in the 
-! parameter list associated with the AUTO-Constant NICP, in order to 
-! print their values on the screen and in the ``p.xxx file.
-!
-! They may also appear in the list associated with AUTO-constant NUZR.
-!
-!---------------------------------------------------------------------- 
-! For algebraic problems the argument U is, as usual, the state vector.
-! For differential equations the argument U represents the approximate 
-! solution on the entire interval [0,1]. In this case its values can
-! be accessed indirectly by calls to GETP, as illustrated below, or
-! by obtaining NDIM, NCOL, NTST via GETP and then dimensioning U as
-! U(NDIM,0:NCOL*NTST) in a seperate subroutine that is called by PVLS.
-!---------------------------------------------------------------------- 
-
-    !---------------------------------------------------------------------- 
-! The first argument of GETP may be one of the following:
-!        'NRM' (L2-norm),     'MAX' (maximum),
-!        'INT' (integral),    'BV0 (left boundary value),
-!        'MIN' (minimum),     'BV1' (right boundary value).
-!        'MNT' (t value for minimum)
-!        'MXT' (t value for maximum)
-!        'NDIM', 'NDX' (effective (active) number of dimensions)
-!        'NTST' (NTST from constant file)
-!        'NCOL' (NCOL from constant file)
-!        'NBC'  (active NBC)
-!        'NINT' (active NINT)
-!        'DTM'  (delta t for all t values, I=1...NTST)
-!        'WINT' (in
-
-!!! COMPUTE L2-NORM OF PSI
- ! Declare variables with double precision

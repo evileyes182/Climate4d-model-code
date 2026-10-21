@@ -1,6 +1,8 @@
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-!   abc :            The A --> B --> C reaction
+!   varRun :  system (10) for AUTO-07p, U = (y_N, y_E, x_B, x_N),
+!             PAR(1:4) = (mu, eta, kappa_N, epsilon), PAR(14:15) = min, max Psi.
+!             Compiled and run by run.py (python3 run.py).
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
 SUBROUTINE FUNC(NDIM,U,ICP,PAR,IJAC,F,DFDU,DFDP)
@@ -195,6 +197,8 @@ DFDU(4,4) = (-1.*(delta_N*ep + ep*k1 + ep*W - 0.5*ep*phi*(x_B - x_E) - &
  IF(IJAC.EQ.1)RETURN
 
 !------------------------------------------------------------
+!------- PARAMETER JACOBIAN
+!------------------------------------------------------------
 DFDP(1,1) = 1
 !------------------------------------------------------------
 DFDP(1,2) = (0.5*(k1 - 1.*k2)*(y_B - 1.*y_N)* &
@@ -257,18 +261,6 @@ DFDP(4,4) = -0.5*(-1.*(k1 - 1.*k2)*(x_B - 1.*x_N)*(-1.*eta + x_B - 1.*x_N - 1.*y
             phi**2*(x_B + x_E - 2*x_N)*(x_E - x_N - y_E + y_N)**2*(1 - &
             tanh((phi*(x_E - x_N - y_E + y_N))/ep)**2))/ep**2
 
-!------------------------------------------------------------
-!------------------------------------------------------------
-!------------------------------------------------------------
-!------------------------------------------------------------
-
-
-  
-!------------------------------------------------------------
-!------- PARAMETER JACOBIAN
-!------------------------------------------------------------
-
-
 END SUBROUTINE FUNC
 !----------------------------------------------------------------------
 
@@ -279,9 +271,6 @@ END SUBROUTINE FUNC
       INTEGER, INTENT(IN) :: NDIM
       DOUBLE PRECISION, INTENT(INOUT) :: U(NDIM),PAR(*)
       DOUBLE PRECISION, INTENT(IN) :: T
-
-      ! Define a quadruple precision kind
-      INTEGER, PARAMETER :: quad_prec = SELECTED_REAL_KIND(p=33, r=4931)   
 
       PAR(1) = -0.002006D0
       PAR(2) = -1.5D0
@@ -316,20 +305,7 @@ SUBROUTINE PVLS(NDIM,U,PAR)
     DOUBLE PRECISION, INTENT(IN) :: U(NDIM)
     DOUBLE PRECISION, INTENT(INOUT) :: PAR(*)
     DOUBLE PRECISION, EXTERNAL :: GETP
-    INTEGER :: NDX, NCOL, NTST, I
-    
-    ! Declare model variables
-    DOUBLE PRECISION :: alphaT, TaN, TaL, T0, phi, x_E
-    DOUBLE PRECISION :: PS_L2, PS_CURR, T, PS_MAX
-    DOUBLE PRECISION :: UVAL1, UVAL2, UVAL4
-    
-    ! Initialize key parameters needed for PS calculation
-    alphaT = 1.7D-4
-    TaN = 7.0D0
-    TaL = 25.0D0
-    T0 = 2.65D0
-    phi = alphaT * (TaN - T0)
-    x_E = (TaL - T0) / (TaN - T0)
+    INTEGER :: NDX, NCOL, NTST
     
     ! Get mesh information
     NDX = NINT(GETP('NDX',0,U))
@@ -340,102 +316,31 @@ SUBROUTINE PVLS(NDIM,U,PAR)
     PAR(12) = GETP('NDIM',0,U)
     PAR(13) = GETP('STA',0,U)
     
-    ! For algebraic problems (NTST = 0), calculate PS directly
-    IF (NTST == 0) THEN
-        PS_CURR = phi * ((U(1) - U(4)) - (U(2) - x_E))
-        PAR(14) = PS_CURR  ! L2-norm is just the value itself for a single point
-        PAR(15) = PS_CURR  ! MAX is also the same value
-    ELSE
-        ! For BVP problems, calculate L2-norm and MAX of PS using actual mesh points
-        PS_L2 = 0.0D0    ! Initialize sum of squares to zero
-        PS_MAX = -1.0D30 ! Initialize maximum to a very small value
-        
-        ! Total number of mesh points is NTST*NCOL+1
-        ! Note: AUTO stores the solution at the mesh points
-        DO I = 0, NTST*NCOL
-            ! Calculate normalized time point in [0,1]
-            T = DBLE(I)/(NTST*NCOL)
-            
-            ! Get solution values at this mesh point
-            CALL GETSOLUTION(NDIM,U,1,T,UVAL1)
-            CALL GETSOLUTION(NDIM,U,2,T,UVAL2)
-            CALL GETSOLUTION(NDIM,U,4,T,UVAL4)
-            
-            ! Calculate PS at this point
-            PS_CURR = phi * ((UVAL1 - UVAL4) - (UVAL2 - x_E))
-            
-            ! Add square of PS to the sum
-            PS_L2 = PS_L2 + PS_CURR * PS_CURR
-            
-            ! Update maximum value if needed
-            PS_MAX = MAX(PS_MAX, PS_CURR)
-        END DO
-        
-        ! Take square root and normalize by number of points to get L2-norm
-        PS_L2 = SQRT(PS_L2 / (NTST*NCOL+1))
-        
-        PAR(14) = PS_L2
-        PAR(15) = PS_MAX
-    END IF
+    ! Minimum and maximum of PS over all NTST*NCOL+1 mesh points (one point when NTST = 0)
+    CALL PSMINMAX(NDX,NTST*NCOL,U,PAR(14),PAR(15))
 END SUBROUTINE PVLS
 
 
-! Helper subroutine to extract solution values at a specific point
-SUBROUTINE GETSOLUTION(NDIM,U,COMPONENT,T,UVAL)
+! Solution dimensioned as U(NDX,0:NTST*NCOL), as in the AUTO demo pvl
+SUBROUTINE PSMINMAX(NDX,M,U,PS_MIN,PS_MAX)
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: NDIM, COMPONENT
-    DOUBLE PRECISION, INTENT(IN) :: U(NDIM), T
-    DOUBLE PRECISION, INTENT(OUT) :: UVAL
-    DOUBLE PRECISION, EXTERNAL :: GETP
+    INTEGER, INTENT(IN) :: NDX, M
+    DOUBLE PRECISION, INTENT(IN) :: U(NDX,0:M)
+    DOUBLE PRECISION, INTENT(OUT) :: PS_MIN, PS_MAX
     
-    ! Use different GETP calls based on position
-    IF (T <= 0.0D0) THEN
-        UVAL = GETP('BV0',COMPONENT,U)
-    ELSE IF (T >= 1.0D0) THEN
-        UVAL = GETP('BV1',COMPONENT,U)
-    ELSE
-        ! For interior points, interpolate using MAX value as an estimate
-        ! This is an approximation - your AUTO version might have better methods
-        UVAL = GETP('MAX',COMPONENT,U)
-    END IF
-END SUBROUTINE GETSOLUTION
-
-!---------------------------------------------------------------------- 
-! NOTE : 
-! Parameters set in this subroutine should be considered as ``solution 
-! measures'' and be used for output purposes only.
-! 
-! They should never be used as `true'' continuation parameters. 
-!
-! They may, however, be added as ``over-specified parameters'' in the 
-! parameter list associated with the AUTO-Constant NICP, in order to 
-! print their values on the screen and in the ``p.xxx file.
-!
-! They may also appear in the list associated with AUTO-constant NUZR.
-!
-!---------------------------------------------------------------------- 
-! For algebraic problems the argument U is, as usual, the state vector.
-! For differential equations the argument U represents the approximate 
-! solution on the entire interval [0,1]. In this case its values can
-! be accessed indirectly by calls to GETP, as illustrated below, or
-! by obtaining NDIM, NCOL, NTST via GETP and then dimensioning U as
-! U(NDIM,0:NCOL*NTST) in a seperate subroutine that is called by PVLS.
-!---------------------------------------------------------------------- 
-
-    !---------------------------------------------------------------------- 
-! The first argument of GETP may be one of the following:
-!        'NRM' (L2-norm),     'MAX' (maximum),
-!        'INT' (integral),    'BV0 (left boundary value),
-!        'MIN' (minimum),     'BV1' (right boundary value).
-!        'MNT' (t value for minimum)
-!        'MXT' (t value for maximum)
-!        'NDIM', 'NDX' (effective (active) number of dimensions)
-!        'NTST' (NTST from constant file)
-!        'NCOL' (NCOL from constant file)
-!        'NBC'  (active NBC)
-!        'NINT' (active NINT)
-!        'DTM'  (delta t for all t values, I=1...NTST)
-!        'WINT' (in
-
-!!! COMPUTE L2-NORM OF PSI
- ! Declare variables with double precision
+    ! Declare model variables
+    DOUBLE PRECISION :: alphaT, TaN, TaL, T0, phi, x_E
+    DOUBLE PRECISION :: PS(0:M)
+    
+    ! Initialize key parameters needed for PS calculation
+    alphaT = 1.7D-4
+    TaN = 7.0D0
+    TaL = 25.0D0
+    T0 = 2.65D0
+    phi = alphaT * (TaN - T0)
+    x_E = (TaL - T0) / (TaN - T0)
+    
+    PS = phi * ((U(1,:) - U(4,:)) - (U(2,:) - x_E))
+    PS_MIN = MINVAL(PS)
+    PS_MAX = MAXVAL(PS)
+END SUBROUTINE PSMINMAX

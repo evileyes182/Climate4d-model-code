@@ -1,8 +1,9 @@
 # Figure 4: one Hopf curve H and one saddle-node curve SN of system (10) in the (mu, eta)-plane,
 # continued from the equilibria at eta = -1.5
+# Run: python3 run.py (with AUTO-07p set up); writes hb_*.dat (mu, eta, l1) and lp_*.dat (mu, eta)
 from auto import *
 
-# Compute EQ
+# Equilibria, continued in mu
 r1 = rl(r(e='varRun', c='genericRun.t', NMX=50000, NTST=0, NCOL=4, JAC=1, IPS=1, ISP=2, NPR=1000, ISW=1, ICP=[1,2,11,12,13,14,15], DS=1e-3, DSMAX=2e-2))
 
 # Hopf curve from HB2 in both directions; save (mu, eta, first Lyapunov coefficient from the d-file)

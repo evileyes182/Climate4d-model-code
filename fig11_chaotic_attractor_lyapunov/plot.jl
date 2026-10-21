@@ -1,5 +1,6 @@
 # Figure 11: chaotic attractor of system (10) at (mu, eta) = (-2.128e-3, -3.99), projected onto the (y_E, y_N)-plane,
 # and time series of K_N and Psi, with convective shutdown events
+# Run: julia plot.jl (after julia run.jl); writes fig11_chaotic_attractor_lyapunov.png
 using CairoMakie, DelimitedFiles
 
 d  = readdlm("attractor.dat")

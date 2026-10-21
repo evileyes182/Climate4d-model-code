@@ -1,4 +1,3 @@
-!dat='PD_right_1_AUTO'
 NDIM=   4, IPS =   1, IRS =   0, ILP =   1
 ICP =  [1,2,11]
 NTST= 100, NCOL=  4, IAD =   1, ISP = 2, ISW = 1, IPLT= 0, NBC= 0, NINT= 0
