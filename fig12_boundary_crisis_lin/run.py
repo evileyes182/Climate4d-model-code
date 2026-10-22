@@ -1,6 +1,6 @@
 # Figure 12: boundary-crisis curve BC of system (10), a fold of homoclinic orbits of a saddle periodic orbit,
 # computed with Lin's method from the periodic orbit of H1 at (mu, eta) = (-2.0672e-3, -4.1)
-# Run: python3 run.py (with AUTO-07p set up; about 10 min); writes bc.dat (mu, eta)
+# Run: auto run.py (with AUTO-07p set up; about 10 min); writes bc.dat (mu, eta)
 from auto import *
 
 # Equilibria at eta = -4.1, continued in mu in both directions

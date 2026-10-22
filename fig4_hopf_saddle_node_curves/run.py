@@ -1,6 +1,6 @@
 # Figure 4: one Hopf curve H and one saddle-node curve SN of system (10) in the (mu, eta)-plane,
 # continued from the equilibria at eta = -1.5
-# Run: python3 run.py (with AUTO-07p set up); writes hb_*.dat (mu, eta, l1) and lp_*.dat (mu, eta)
+# Run: auto run.py (with AUTO-07p set up); writes hb_*.dat (mu, eta, l1) and lp_*.dat (mu, eta)
 from auto import *
 
 # Equilibria, continued in mu

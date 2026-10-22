@@ -1,6 +1,6 @@
 # Figure 7: saddle-node curve S and period-doubling curve PD of periodic orbits of system (10) in the (mu, eta)-plane,
 # continued from the S and PD points bounding the second stable interval of the branch from H1 at eta = -4.08
-# Run: python3 run.py (with AUTO-07p set up; about 10 min); writes s_*.dat and pd_*.dat (mu, eta)
+# Run: auto run.py (with AUTO-07p set up; about 10 min); writes s_*.dat and pd_*.dat (mu, eta)
 from auto import *
 
 # Equilibria, continued in mu

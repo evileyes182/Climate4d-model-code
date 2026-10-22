@@ -1,6 +1,6 @@
 # Figure 4: one Hopf curve H (solid supercritical, dashed subcritical) and one saddle-node curve SN
 # of system (10) in the (mu, eta)-plane
-# Run: julia plot.jl (after python3 run.py); writes fig4_hopf_saddle_node_curves.png
+# Run: julia plot.jl (after auto run.py); writes fig4_hopf_saddle_node_curves.png
 using CairoMakie, DelimitedFiles
 
 fig = Figure(size = (500, 400))

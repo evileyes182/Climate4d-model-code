@@ -1,6 +1,6 @@
 # Figure 7: saddle-node curve S and period-doubling curve PD of periodic orbits of system (10)
 # in the (mu, eta)-plane
-# Run: julia plot.jl (after python3 run.py); writes fig7_saddle_node_period_doubling_curves.png
+# Run: julia plot.jl (after auto run.py); writes fig7_saddle_node_period_doubling_curves.png
 using CairoMakie, DelimitedFiles
 
 fig = Figure(size = (500, 500))

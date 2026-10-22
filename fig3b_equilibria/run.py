@@ -1,5 +1,5 @@
 # Figure 3(b): equilibria of system (10) continued in mu for eta = -1.5
-# Run: python3 run.py (with AUTO-07p set up); writes eq_*.dat (branches) and eq_*_special.dat (Hopf and saddle-node points)
+# Run: auto run.py (with AUTO-07p set up); writes eq_*.dat (branches) and eq_*_special.dat (Hopf and saddle-node points)
 from auto import *
 
 # Equilibria, continued in mu in both directions

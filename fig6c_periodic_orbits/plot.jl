@@ -1,6 +1,6 @@
 # Figure 6(c): equilibria and periodic orbits of system (10) in mu for eta = -4.08,
 # plotted as min(Psi) and max(Psi)
-# Run: julia plot.jl (after python3 run.py); writes fig6c_periodic_orbits.png
+# Run: julia plot.jl (after auto run.py); writes fig6c_periodic_orbits.png
 using CairoMakie, DelimitedFiles
 
 fig = Figure(size = (500, 350))

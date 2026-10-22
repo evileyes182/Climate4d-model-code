@@ -1,5 +1,5 @@
 # Figure 3(b): equilibria of system (10) in mu for eta = -1.5, plotted as Psi
-# Run: julia plot.jl (after python3 run.py); writes fig3b_equilibria.png
+# Run: julia plot.jl (after auto run.py); writes fig3b_equilibria.png
 using CairoMakie, DelimitedFiles
 
 fig = Figure(size = (500, 300))

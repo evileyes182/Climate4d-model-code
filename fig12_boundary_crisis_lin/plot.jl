@@ -1,6 +1,6 @@
 # Figure 12: boundary-crisis curve BC of system (10), a fold of homoclinic orbits of a saddle periodic orbit,
 # in the (mu, eta)-plane
-# Run: julia plot.jl (after python3 run.py); writes fig12_boundary_crisis_lin.png
+# Run: julia plot.jl (after auto run.py); writes fig12_boundary_crisis_lin.png
 using CairoMakie, DelimitedFiles
 
 fig = Figure(size = (500, 500))
