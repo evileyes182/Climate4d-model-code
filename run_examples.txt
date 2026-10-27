@@ -1,0 +1,40 @@
+# Commands to run all six examples, in the order of the README.
+# AUTO-07p, Python 3 and Julia must be installed.
+
+cd Climate4d-model-code
+
+# Figure 3(b): branches of equilibria for eta = -1.5
+cd fig3b_equilibria
+auto run.py
+julia plot.jl
+cd ..
+
+# Figure 4: Hopf curve and saddle-node curve in the (mu, eta)-plane
+cd fig4_hopf_saddle_node_curves
+auto run.py
+julia plot.jl
+cd ..
+
+# Figure 6(c): branch of periodic orbits from H_1 for eta = -4.08
+cd fig6c_periodic_orbits
+auto run.py
+julia plot.jl
+cd ..
+
+# Figure 7: saddle-node and period-doubling curves of periodic orbits in the (mu, eta)-plane
+cd fig7_saddle_node_period_doubling_curves
+auto run.py
+julia plot.jl
+cd ..
+
+# Figure 11: chaotic attractor and its largest Lyapunov exponent at (mu, eta) = (-2.128e-3, -3.99)
+cd fig11_chaotic_attractor_lyapunov
+julia run.jl
+julia plot.jl
+cd ..
+
+# Figure 12: boundary-crisis curve BC_2 computed with Lin's method
+cd fig12_boundary_crisis_lin
+auto run.py
+julia plot.jl
+cd ..
